@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Braille to Speech Converter</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+   body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(to right, #e8fff9, #e0f7fa); /* Light green to blue */
+  padding-top: 80px;
+  padding-bottom: 80px;
+  color: #056676;
+}
+
+header {
+  background: linear-gradient(to right, #b2fefa, #0ed2f7);
+  color: #004d40;
+  padding: 20px 0;
+  text-align: center;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 0 10px #b2fefa;
+  text-shadow: 0 0 2px #ffffff;
+}
+
+footer {
+  background: linear-gradient(to right, #a1ffce, #faffd1);
+  color: #00695c;
+  text-align: center;
+  padding: 15px 0;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  box-shadow: 0 0 8px #a1ffce;
+}
+
+textarea,
+.form-control,
+.form-select {
+  background: #ffffff;
+  color: #00695c;
+  border: 1px solid #81ecec;
+  border-radius: 10px;
+  padding: 15px;
+  font-size: 1rem;
+  box-shadow: 0 0 5px #b2fefa;
+}
+
+.btn-custom {
+  background: linear-gradient(135deg, #a1ffce, #b2fefa);
+  color: #004d40;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: 0.3s ease-in-out;
+  box-shadow: 0 0 10px #b2fefa;
+}
+
+.btn-custom:hover {
+  background: linear-gradient(135deg, #d4fc79, #96e6a1);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #a1ffce;
+}
+
+.input_image {
+  border: 2px dashed #b2fefa;
+  border-radius: 10px;
+  padding: 10px;
+  max-width: 100%;
+  height: auto;
+  margin: 15px 0;
+  box-shadow: 0 0 10px #b2fefa;
+}
+
+.range-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress {
+  height: 20px;
+  border-radius: 10px;
+  background: #f0fefc;
+  box-shadow: 0 0 5px #b2fefa;
+}
+
+.progress-bar {
+  background: linear-gradient(to right, #a1ffce, #b2fefa);
+  box-shadow: 0 0 10px #a1ffce;
+}
+
+#speedRange {
+  -webkit-appearance: none;
+  width: 200px;
+  height: 10px;
+  background: linear-gradient(to right, #a1ffce, #b2fefa);
+  border-radius: 5px;
+  outline: none;
+  box-shadow: 0 0 8px #b2fefa;
+}
+
+#speedRange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border: 2px solid #81ecec;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 5px #81ecec;
+  transition: transform 0.2s;
+}
+
+#speedRange::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px #a1ffce;
+}
+
+#speedRange::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border: 2px solid #81ecec;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 5px #81ecec;
+}
+
+#speedRange::-moz-range-track {
+  background: linear-gradient(to right, #a1ffce, #b2fefa);
+  height: 10px;
+  border-radius: 5px;
+}
+
+#speedValue {
+  background-color: #e0f7fa;
+  color: #00695c;
+  border: 1px solid #81ecec;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #b2fefa;
+}
+
+h1, h2, label, kbd {
+  text-shadow: 0 0 2px #b2fefa, 0 0 4px #a1ffce;
+}
+
+select option {
+  background: #ffffff;
+  color: #004d40;
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Braille to Speech Converter</h1>
+  </header>
+
+  <main class="container mt-5">
+    
+    <section class="text-center">
+      <img id="inputimage" src="/coverimage" class="img-fluid input_image" alt="Raw">
+      <kbd id="output" class="d-block mt-3">Click on Convert to get the English text for the above image</kbd>
+    </section>
+
+    <section class="mt-5">
+      <div class="mb-3">
+        <label for="file_input" class="form-label">Upload Braille Image</label>
+        <input type="file" class="form-control" id="file_input" onchange="input_filename();">
+        <small id="file_input_label" class="form-text text-muted">Select file</small>
+      </div>
+      <div class="mb-3">
+        <button onclick="upload('/digest');" id="upload_btn" class="btn btn-custom">Convert to Text</button>
+        <button class="btn btn-secondary d-none" id="loading_btn" type="button" disabled>
+          <span class="spinner-border spinner-border-sm"></span> Uploading...
+        </button>
+        <button type="button" id="cancel_btn" class="btn btn-outline-danger d-none">Cancel upload</button>
+      </div>
+      <div id="progress_wrapper" class="d-none">
+        <label id="progress_status"></label>
+        <div class="progress">
+          <div id="progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+        </div>
+      </div>
+    </section>
+	<div id="alert_wrapper"></div>
+
+    <section class="mb-5">
+      <h2 class="mb-3">Choose Intended Language</h2>
+      <div class="row">
+        <div class="col-md-6">
+          <select id="languageSelect" class="form-select">
+            <option value="hi-IN">Hindi</option>
+            <option value="te-IN">Telugu</option>
+          </select>
+        </div>
+      </div>
+      <textarea id="englishText" class="form-control mt-3" rows="4" placeholder="Enter text in English"></textarea>
+      <button onclick="translateText()" class="btn btn-custom mt-3">Translate</button>
+    </section>
+
+
+    <section class="row mt-4">
+      <div class="col-md-6">
+        <button class="btn btn-dark w-100" id="play123">Play</button>
+      </div>
+      <div class="col-md-6">
+        <button class="btn btn-danger w-100" id="stop">Stop</button>
+      </div>
+     <div class="col-12 mt-4">
+  <label for="speedRange" class="form-label fw-bold">Speech Speed</label>
+  <div class="d-flex align-items-center gap-3">
+    <input type="range" class="form-range" id="speedRange" min="0.5" max="2" value="1" step="0.1" style="width: 200px;">
+    <span id="speedValue" class="badge bg-success px-3 py-2 fs-6">1x</span>
+  </div>
+</div>
+
+
+    </section>
+  </main>
+
+
+  <script>
+    let synth = window.speechSynthesis;
+    let currentUtterance = null;
+    let voices = [];
+
+    function translateText() {
+      let text = document.getElementById("englishText").value;
+      let targetLanguage = document.getElementById("languageSelect").value;
+
+      fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLanguage}`)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("output").innerText = data.responseData.translatedText;
+        })
+        .catch(error => console.error("Translation Error:", error));
+    }
+
+    document.getElementById("play123").onclick = function () {
+      let textToSpeak = document.getElementById("output").innerText;
+      if (!textToSpeak.trim()) {
+        alert("No text to speak. Please convert the image first.");
+        return;
+      }
+      if (synth.speaking) synth.cancel();
+
+      currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
+      currentUtterance.volume = 1;
+      currentUtterance.rate = parseFloat(document.getElementById("speedRange").value);
+      currentUtterance.pitch = 0.8;
+      currentUtterance.lang = document.getElementById("languageSelect").value;
+
+      synth.speak(currentUtterance);
+    };
+
+    document.getElementById("stop").onclick = function () {
+      synth.cancel();
+    };
+
+    document.getElementById("speedRange").oninput = function () {
+      let speed = parseFloat(this.value);
+      document.getElementById("speedValue").innerText = speed.toFixed(1) + "x";
+    };
+
+    function show_alert(message, type) {
+      document.getElementById("alert_wrapper").innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+    }
+
+    function upload(url) {
+      let input = document.getElementById("file_input");
+      if (!input.value) {
+        show_alert("No file selected", "warning");
+        return;
+      }
+
+      let data = new FormData();
+      let request = new XMLHttpRequest();
+      let file = input.files[0];
+
+      data.append("file", file);
+      request.responseType = "json";
+
+      document.getElementById("upload_btn").classList.add("d-none");
+      document.getElementById("loading_btn").classList.remove("d-none");
+      document.getElementById("cancel_btn").classList.remove("d-none");
+      document.getElementById("progress_wrapper").classList.remove("d-none");
+
+      request.upload.addEventListener("progress", function (e) {
+        let percent = Math.floor((e.loaded / e.total) * 100);
+        document.getElementById("progress").style.width = `${percent}%`;
+        document.getElementById("progress_status").innerText = `${percent}% uploaded`;
+      });
+
+      request.addEventListener("load", function () {
+        if (request.status === 200 && !request.response.error) {
+          document.getElementById("inputimage").src = '/procimage/' + request.response.img_id + '?' + Date.now();
+          document.getElementById("output").innerText = request.response.digest;
+          show_alert(request.response.message, "success");
+        } else {
+          show_alert(request.response?.message || "Upload failed", "danger");
+        }
+        resetUpload();
+      });
+
+      request.addEventListener("error", () => {
+        show_alert("Error uploading file", "danger");
+        resetUpload();
+      });
+
+      request.addEventListener("abort", () => {
+        show_alert("Upload cancelled", "info");
+        resetUpload();
+      });
+
+      request.open("POST", url);
+      request.send(data);
+
+      document.getElementById("cancel_btn").onclick = () => request.abort();
+    }
+
+    function input_filename() {
+      document.getElementById("file_input_label").innerText = document.getElementById("file_input").files[0].name;
+    }
+
+    function resetUpload() {
+      document.getElementById("file_input").value = "";
+      document.getElementById("file_input_label").innerText = "Select file";
+      document.getElementById("upload_btn").classList.remove("d-none");
+      document.getElementById("loading_btn").classList.add("d-none");
+      document.getElementById("cancel_btn").classList.add("d-none");
+      document.getElementById("progress_wrapper").classList.add("d-none");
+      document.getElementById("progress").style.width = "0%";
+    }
+  </script>
+</body>
+</html>
